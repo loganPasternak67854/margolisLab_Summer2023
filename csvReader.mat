@@ -1,0 +1,75 @@
+function[folderPath,p,matrix,layers]=csvReader()
+
+%{
+
+csvReader: This function will read in all the Daas ROS data and store it in
+a matrix. Along with this matrix, there will also be an accompanying layers
+array. This array indicates how the ROIs in the matrix are arranged. For
+example, if Daas8 is at index four of the array, then the ROI image data can
+be found in the fourth layer of the matrix.
+
+NOTE: The csv files have to be in their own dedicated folder in order for
+the program to operate.
+
+INPUT: paths to csv ROI files
+OUTPUT: ROI matrix
+
+%}
+
+%Retrieves the csv folder datapath
+
+fprintf('Please give me the folder containing all csv files...\n');
+
+path=uigetdir;
+
+if isequal(path,0)
+    disp('User selected Cancel')
+    return
+else
+    disp(['User selected ',path]);
+    folderPath=path;
+end
+
+%Reads information about csv data in csv folder
+
+p=dir([folderPath '/*.csv']);
+
+%Create an array of csv filenames
+
+for k=1:length(p)
+
+    filename=[folderPath '/' p(k).name];
+
+end
+
+%Create a string array which will contain the csv data paths
+
+csvPaths=strings(length(p),1);
+
+for w=1:length(p)
+    csvPaths(w)=strcat(p(w).folder,'/',p(w).name);
+end
+
+%Use readtable in order to import ROI data into a matrix
+
+for w=1:length(p)
+
+    T=readtable(csvPaths(w));
+    T_mat=table2array(T);
+    matrix(:,:,w)=T_mat;
+
+end
+
+
+dimension=length(p);
+layers=string(dimension);
+
+for w=1:length(p)
+
+    layers(w)=p(w).name;
+
+end
+
+imshow(matrix(:,:,1));
+
+%data=matrix;
