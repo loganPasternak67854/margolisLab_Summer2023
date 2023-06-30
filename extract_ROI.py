@@ -15,10 +15,11 @@ Displays all the ROIs for each session.
 
 """
 
-def extract_ROI(statPath,opsPath):
+def extract_ROI(statPath,opsPath,iscellPath):
     #numpy.load(filename): function return the input array from a disk file with npy extension(.npy)
 
     stat = np.load(statPath,allow_pickle=True)
+    iscell=np.load(iscellPath,allow_pickle=True)
     ops = np.load(opsPath,allow_pickle=True).item()
 
     #numpy.zeros(shape): return a new array of given shape and type, filled with zeros
@@ -28,12 +29,11 @@ def extract_ROI(statPath,opsPath):
 
     #Number of cells is equal to the size of stats
     ncells=stat.size
-    #print("\n")
-    #print(ncells)
-
-    #What is ncells? Is one supposed to retrieve it from ops in some way?
 
     for n in range(0,ncells):
+        
+        #USE iscell to select cells that we want to include and exclude those that we don't (1 is good! 0 is bad!)
+        if iscell[n,0]==1:
         ypix = stat[n]['ypix'][~stat[n]['overlap']]
         xpix = stat[n]['xpix'][~stat[n]['overlap']]
         im[ypix,xpix] = n+1
