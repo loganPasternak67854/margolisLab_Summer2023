@@ -71,7 +71,8 @@ class Images():
 
         #matplotlib.pyplot.imshow(imageData): in pyplot module of matplotlib library is used to display data
         #as an image; i.e. on a 2D regular raster
-        plt.imshow(self.image)
+        #plt.imshow(self.image,cmap='gray')
+        plt.imshow(self.image,cmap='gray')
 
         #plt.show(): Display all open figures
         plt.show()
@@ -83,7 +84,7 @@ mouseName=input("Please provide the name of a mouse\n")
 
 #print("Retrieve stat.npy and ops.npy path arrays.\n")
 
-(statPaths,opsPaths)=func1.retrievePath(mouseName)
+(statPaths,opsPaths,iscellPaths)=func1.retrievePath(mouseName)
 
 #Provides an array which shows which Daas is associated with a specific path and index
 
@@ -110,7 +111,7 @@ if no_or_yes==1:
 
     for i in range(0,len(statPaths)):
         
-        matrix=func2.extract_ROI(statPaths[i],opsPaths[i])
+        matrix=func2.extract_ROI(statPaths[i],opsPaths[i],iscellPaths[i])
         new_mouseName=str(mouseName)
         new_i=str(i)
         combinedPath=my_dir+'/'+new_mouseName+new_i+'.csv'
@@ -126,11 +127,8 @@ if no_or_yes==1:
         print(image_array[i].image)
         print("\n\n\n")
 
-    #print("This is the number of Daas': ", len(statPaths))
-
     #This function will save the ROS matrices as csv files (example: Romero will give us 20 ROS csv files)
     for i in range(0,len(statPaths)):
-        #fileName=str(image_array[i].mouseName)+image_array[i]+trueName[i]+'.csv'
         fileName=str(image_array[i].mouseName)+trueName[i]+'.csv'
         np.savetxt(fileName,image_array[i].image,delimiter=',')
 
@@ -145,7 +143,9 @@ else:
      
     for i in range(0,len(statPaths)):
         
-        matrix=func2.extract_ROI(statPaths[i],opsPaths[i])
+        matrix=func2.extract_ROI(statPaths[i],opsPaths[i],iscellPaths[i])
+        #Makes either 0 or 1
+        #matrix[matrix!=0]=1
         image_array.append(Images(matrix,i,mouseName))
 
     #Output test
