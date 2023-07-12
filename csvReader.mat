@@ -1,18 +1,58 @@
-function[folderPath,p,matrix,layers]=csvReader()
+function[data,bank,box,rock,images]=csvReader()
 
 %{
+DESCRIPTION: This function is the main branch of an alogrithm that does
+probabilistic analysis of neurons across 2p sessions. It calculates the
+distance, jaccard index, and 2d-correlation between each ROI of session 1 
+with all the ROIs of every other session. One also has the option to
+display a black and white image of a session with associated centroids
+within range. An option is also available to look view an overlap between
+two cropped images along with the two masks' combined distance, jaccard
+index, and 2d-correlation value.
 
-csvReader: This function will read in all the Daas ROS data and store it in
-a matrix. Along with this matrix, there will also be an accompanying layers
-array. This array indicates how the ROIs in the matrix are arranged. For
-example, if Daas8 is at index four of the array, then the ROI image data can
-be found in the fourth layer of the matrix.
+NECESSARY FUNCTIONS AND LIBRARIES:
 
-NOTE: The csv files have to be in their own dedicated folder in order for
-the program to operate.
+centroidDistance.m
+show_ROILayer.m
+similarityAnalysis.m
+overlayDisplay.m
+ImageProcessing Toolbox
 
-INPUT: paths to csv ROI files
-OUTPUT: ROI matrix
+INPUTS: User will select the folder with all csv files containing session 
+        data from the directory.
+OUTPUTS: 
+        data: The primary structure containing all relevant data including
+        ROI centroid data (Centroids), ROI similarity data (Similarity), 
+        ,ROI distance data (Distance), and the image data for each session 
+        (LayerROIData). The cell of each distance and similarity matrix 
+        contains the similarity data between a mask of Daas1 and a mask of 
+        Daas x. The row number of the matrix tells you which mask is being 
+        considered in Daas1 and the column number tells you which mask is 
+        considered in Daas x.
+
+        bank: This is the output of centroidDistance. Will contain distance
+        data and centroid data. 
+
+        box: This is the output of similarityAnalysis. This will contain
+        the similarity data (Jaccard and 2d-Correlation) for every ROI of
+        every session. The data will manifest as a matrices of structures.
+        The cell of each similarity matrix contains the similarity data
+        between a mask of Daas1 and a mask of Daas x. The row number of the
+        matrix tells you which mask is being considered in Daas1 and the
+        column number tells you which mask is considered in Daas x.
+
+        rock: This is a diagostic variable. It tells you if the similarity
+        analysis function could not fully crop out a mask within a session.
+
+        images:This contains the cropped out images of each mask of a
+        session. Every cropped out mask is 10x10 pixels. The center of the
+        cropped out image is the centroid for the mask. NOTE: Neurons are
+        cropped out selectively. To be specific, if a centroid is found
+        that is between the following coordinates then image cropping can
+        be done: 11<xpixel<numRows-11 and 11<ypixel<numCols-11 (numRows and
+        numCols are the dimensions of the session image). This is done to
+        avoid improperly cropped images getting in the way of similarity
+        analysis. 
 
 %}
 
@@ -60,6 +100,7 @@ for w=1:length(p)
 
 end
 
+%This function will store the file names for each layer of the matrix
 
 dimension=length(p);
 layers=string(dimension);
@@ -70,6 +111,149 @@ for w=1:length(p)
 
 end
 
-imshow(matrix(:,:,1));
+%This will convert the string filenames in the layers array to character
+%arrays. These character arrays are then used to identify how to reorder
+%the layers list as to have Daas numbers in increasing order.
 
-%data=matrix;
+daasList=zeros(1,length(p));
+
+for i=1:dimension
+
+    charArray=convertStringsToChars(layers(i));
+
+    %For Daas1-Daas20
+    if charArray(7)=='D'
+        
+        %For Daas1-Daas9
+        if (charArray(12)=='.')
+
+            daasNum=charArray(11);
+            daasNum=str2num(daasNum);
+            daasList(i)=daasNum;
+        
+        %For Daas10-Daas20
+        else
+
+            daasNum1=charArray(11);
+            daasNum2=charArray(12);
+            daasNum=append(daasNum1,daasNum2);
+            daasNum=str2num(daasNum);
+            daasList(i)=daasNum;
+
+        end
+
+    %For ReversalDaas1-ReversalDaas6
+    else
+            daasNum=charArray(19);
+            daasNum=str2num(daasNum);
+            daasList(i)=daasNum+50;
+
+    end
+
+end
+
+%Sorts the layers array as to match the increasing Daas number ordering.
+%Also sorts the matrix array to compliment this change.
+[daasList_sorted,I]=sort(daasList);
+layers_sorted=layers(I);
+matrixNew=matrix(:,:,I);
+
+%Threshold the image
+%matrixNew=matrixNew>50;
+
+%We can see some circles not completely filled.
+%Use imfill function to fill these holes.
+matrixNew=imfill(matrixNew,'holes');
+
+%Creates binary image 3d matrix
+matrixNew=imbinarize(matrixNew);
+
+%Removes small objects from binary image that have fewer than 3 pixels
+
+matrixNew=bwareaopen(matrixNew,3);
+
+[xdim,ydim]=size(matrixNew);
+
+%Create a structure with all relevant data ordered
+%{
+
+%}
+field1='LayerIdentification';
+field2='LayerROIData';
+field3='Distance';
+field4='Similarity';
+field5='Centroids';
+field6='BoundingBox';
+field7='oldCentroids';
+
+data=struct(field1,{},field2,{},field3,{},field4,{},field5,{},field6,{},field7,{});
+
+
+for i=1:dimension
+
+    data(i).LayerIdentification=layers_sorted(i);
+    data(i).LayerROIData=matrixNew(:,:,i);
+    data(i).Similarity=0;
+    
+
+end
+
+bank=centroidDistance(data,dimension,xdim,ydim);
+
+for i=1:dimension
+    data(i).oldCentroids=bank(i).centroids;
+    data(i).Centroids=bank(i).correctCentroids;
+    data(i).BoundingBox=bank(i).boundingBox;
+end
+
+for i=2:dimension
+    data(i).Distance=bank(i).distance;
+end
+
+%Find max and min values of length and width of bounding box and figure out
+%thresholding.This will be fed into similarity analysis will be used to
+%calc the dimensions of the evaluation window. Multipy max and min by 2.
+
+[box,images,tf]=similarityAnalysis(data,dimension);
+
+for i=2:dimension
+
+    [row,column]=size(data(i).Distance);
+    data(i).Similarity=box(:,1:column,i);
+
+end
+
+%Used to display a Daas with centroids labeled
+
+in=input("Do you want to display a Daas image with centroids labeled? 1=Yes and 2=No ...\n");
+yn=cast(in,"uint8");
+if yn==1
+show_ROILayer(data);
+end
+
+%Used to visualize overlay between masks and display distance and
+%similarity values.
+
+in=input("Do you want to display an overlay of two masks? 1=Yes and 2=No ...\n");
+yn=cast(in,"uint8");
+if yn==1
+overlayDisplay(images,data);
+end
+
+%Shows which masks comparisons are viable
+
+v=tf(:,:,17);
+
+w=box(:,:,17);
+
+for i=2:dimension
+
+    if any(tf(:,:,i),"all")
+        rock(i)=1;
+    else
+        rock(i)=0;
+    end
+
+end
+
+end
