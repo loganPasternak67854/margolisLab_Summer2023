@@ -47,7 +47,7 @@ for i=1:numLayers
     forum=zeros(numRows,2);
     for j=1:numRows
         
-        if (image(j,1)>11) && (image(j,1)<(xdim-11)) && (image(j,2)>11) && (image(j,2)<(ydim-11))
+        if (30<image(j,1)) && (image(j,1)<(ydim-30)) && (30<image(j,2)) && (image(j,2)<(xdim-30))
             forum(j,1)=image(j,1);
             forum(j,2)=image(j,2);
         else       
