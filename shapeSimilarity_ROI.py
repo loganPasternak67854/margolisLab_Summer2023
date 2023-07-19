@@ -26,6 +26,9 @@ import identification as func3
 import matplotlib.pyplot as plt
 import numpy as np
 from tkinter import filedialog
+import os as saver
+from skimage import io
+#from PIL import Image
 
 class Images():
     #Initilize the object with the ROI image matrix and a reference number. This reference number is used to identify an image.
@@ -33,6 +36,7 @@ class Images():
         self.image=matrix
         self.refNum=num
         self.mouseName=mouse
+
 
     #Destructor for Images instance
     def __del__(self):
@@ -67,15 +71,22 @@ class Images():
     def showImage(self):
 
         temp=self.refNum
+        im=self.image
+
         print("THIS IS IMAGE ",temp)
 
         #matplotlib.pyplot.imshow(imageData): in pyplot module of matplotlib library is used to display data
         #as an image; i.e. on a 2D regular raster
         #plt.imshow(self.image,cmap='gray')
-        plt.imshow(self.image,cmap='gray')
-
-        #plt.show(): Display all open figures
+        plt.imshow(im[1])
+        plt.title("All Cell ROIs")
         plt.show()
+
+        print("\n\n")
+        print(im[1].shape)
+        print("\n\n")
+        #plt.imshow(self.image,cmap='gray')
+
 
 
 #retrievePath for stat.npy and ops.npy for given mouse
@@ -112,9 +123,9 @@ if no_or_yes==1:
     for i in range(0,len(statPaths)):
         
         matrix=func2.extract_ROI(statPaths[i],opsPaths[i],iscellPaths[i])
-        new_mouseName=str(mouseName)
-        new_i=str(i)
-        combinedPath=my_dir+'/'+new_mouseName+new_i+'.csv'
+        #new_mouseName=str(mouseName)
+        #new_i=str(i)
+        #combinedPath=my_dir+'/'+new_mouseName+new_i+'.csv'
         image_array.append(Images(matrix,i,mouseName))
 
     #Output test
@@ -130,7 +141,15 @@ if no_or_yes==1:
     #This function will save the ROS matrices as csv files (example: Romero will give us 20 ROS csv files)
     for i in range(0,len(statPaths)):
         fileName=str(image_array[i].mouseName)+trueName[i]+'.csv'
-        np.savetxt(fileName,image_array[i].image,delimiter=',')
+        fileName=str(fileName)
+        combinedPath=saver.path.join(my_dir,fileName)
+        img=image_array[i].image
+        img=img[1]
+        img=np.mean(img,axis=2)
+        np.savetxt(combinedPath,img,delimiter=',')
+
+
+        
 
     #Deletes image object array
     for i in range (len(statPaths),0):
@@ -155,7 +174,8 @@ else:
         print("\n")
         print(image_array[i].refNum)
         print("\n")
-        print(image_array[i].image)
+        temp=image_array[i].image
+        print(temp[1])
         print("\n\n\n")
 
     #This shows an image for one of the ROS matrices
