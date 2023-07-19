@@ -161,18 +161,48 @@ matrixNew=matrix(:,:,I);
 %Threshold the image
 %matrixNew=matrixNew>50;
 
-%We can see some circles not completely filled.
-%Use imfill function to fill these holes.
-matrixNew=imfill(matrixNew,'holes');
+%{
+r=size(matrixNew,1);
+c=size(matrixNew,2);
+l=size(matrixNew,3);
+
+for i=1:l
+    for j=1:r
+        for k=1:c
+
+            if matrixNew(j,k,i)>0
+                matrixNew(j,k,i)=1;
+            end
+
+        end
+    end
+end
+%}
 
 %Creates binary image 3d matrix
 matrixNew=imbinarize(matrixNew);
+
+%We can see some circles not completely filled.
+%Use imfill function to fill these holes.
+matrixNew=imfill(matrixNew,'holes');
 
 %Removes small objects from binary image that have fewer than 3 pixels
 
 matrixNew=bwareaopen(matrixNew,3);
 
-[xdim,ydim]=size(matrixNew);
+[xdim,ydim,zdim]=size(matrixNew);
+
+fprintf("\n")
+fprintf("xdim=")
+fprintf("%d",xdim);
+fprintf("\n")
+fprintf("ydim=")
+fprintf("%d",ydim);
+fprintf("\n")
+fprintf("zdim=")
+fprintf("%d",zdim);
+fprintf("\n")
+fprintf("\n")
 
 %Create a structure with all relevant data ordered
 %{
@@ -256,4 +286,12 @@ for i=2:dimension
 
 end
 
+%{
+imshow(images(1,97).window)
+figure, imshow(images(1,160).window)
+figure, imshow(images(5,69).window)
+figure, imshow(images(5,156).window)
+%}
+
 end
+
