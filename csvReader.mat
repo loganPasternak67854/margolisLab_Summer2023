@@ -1,4 +1,4 @@
-function[data,bank,box,rock,images]=csvReader()
+function[data,bank,box,rock,images,roiPick]=csvReader()
 
 %{
 DESCRIPTION: This function is the main branch of an alogrithm that does
@@ -161,48 +161,24 @@ matrixNew=matrix(:,:,I);
 %Threshold the image
 %matrixNew=matrixNew>50;
 
-%{
-r=size(matrixNew,1);
-c=size(matrixNew,2);
-l=size(matrixNew,3);
-
-for i=1:l
-    for j=1:r
-        for k=1:c
-
-            if matrixNew(j,k,i)>0
-                matrixNew(j,k,i)=1;
-            end
-
-        end
-    end
-end
-%}
-
 %Creates binary image 3d matrix
 matrixNew=imbinarize(matrixNew);
 
 %We can see some circles not completely filled.
 %Use imfill function to fill these holes.
-matrixNew=imfill(matrixNew,'holes');
+
+l=size(matrixNew,3);
+for i=1:l
+    matrixNew(:,:,i)=imfill(matrixNew(:,:,i),'holes');
+end
+
+%matrixNew=imfill(matrixNew,'holes');
 
 %Removes small objects from binary image that have fewer than 3 pixels
 
 matrixNew=bwareaopen(matrixNew,3);
 
 [xdim,ydim,zdim]=size(matrixNew);
-
-fprintf("\n")
-fprintf("xdim=")
-fprintf("%d",xdim);
-fprintf("\n")
-fprintf("ydim=")
-fprintf("%d",ydim);
-fprintf("\n")
-fprintf("zdim=")
-fprintf("%d",zdim);
-fprintf("\n")
-fprintf("\n")
 
 %Create a structure with all relevant data ordered
 %{
@@ -272,10 +248,6 @@ end
 
 %Shows which masks comparisons are viable
 
-v=tf(:,:,17);
-
-w=box(:,:,17);
-
 for i=2:dimension
 
     if any(tf(:,:,i),"all")
@@ -287,11 +259,45 @@ for i=2:dimension
 end
 
 %{
-imshow(images(1,97).window)
-figure, imshow(images(1,160).window)
-figure, imshow(images(5,69).window)
-figure, imshow(images(5,156).window)
+Pick an roi from Daas one and collect all the combinations of similarity
+and distance calculations for all the sessions. This will output a
+structure contains data tables. The structure will have 2:(number of
+session) tables.
+%}
+
+[roiPick,numpy]=roi_accross_day(data,dimension);
+
+%Creepy image of me pops up when best_worst_actual initiated
+roiPick=best_worst_actual(roiPick,dimension,images,data,numpy);
+
+%{
+
+imshow(images(1,52).window)
+title('Daas1 ROI1');
+figure, imshow(images(1,47).window)
+title('Daas1 ROI2');
+figure, imshow(images(1,67).window)
+title('Daas1 ROI3');
+figure, imshow(images(1,91).window)
+title('Daas1 ROI4');
+figure, imshow(images(1,44).window)
+title('Daas1 ROI5');
+figure, imshow(images(1,46).window)
+title('Daas1 ROI6');
+
+figure, imshow(images(5,46).window)
+title('Daas5 ROI1');
+figure, imshow(images(5,41).window)
+title('Daas5 ROI2');
+figure, imshow(images(5,65).window)
+title('Daas5 ROI3');
+figure, imshow(images(5,83).window)
+title('Daas5 ROI4')
+figure, imshow(images(5,40).window)
+title('Daas5 ROI5')
+figure, imshow(images(5,36).window)
+title('Daas5 ROI6')
+
 %}
 
 end
-
