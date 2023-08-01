@@ -1,5 +1,20 @@
 function[maxIndex]=mostSimilar(struct,choice)
+%{
+Function Specifictations: 
+This function takes the list of tables which represent the combinations of
+pairings for a single ROI in session 1 and finds the pairing within
+selected session that exhibits the best similarity scaling. The location
+of this most similar pairing is output as the result of the function.
 
+INPUT: 
+struct: The structure of tables which contain the data for the specific ROI
+combinations.
+choice: The selected session, excluding the first, that is the domain for
+the best pair search. 
+
+OUTPUT:
+maxIndex: The location of the best pairing within the chosen session.
+%}
 daas='Daas';
 s=num2str(choice);
 field=strcat(daas,s);
