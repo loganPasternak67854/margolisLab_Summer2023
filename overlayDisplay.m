@@ -1,4 +1,20 @@
 function[]=overlayDisplay(images,data)
+%{
+Function Specifications:
+
+INPUT:
+images: The collection of cropped out images for each Daas. These cropped
+images are standardized black and white pictures of each region of
+interest.
+
+data: The structure containing all relevant data calculated up until this
+point. This contains the quantitative and probablistic analysis results 
+for every ROI pairing for every ROI in session 1.
+
+
+OUTPUT: NaN
+
+%}
 
 %Choose which mask in Daas1 you want to use for comparison
 in=input("Please select a mask in Daas 1...\n");
