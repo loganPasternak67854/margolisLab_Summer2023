@@ -1,4 +1,32 @@
 function[]=overlayDisplay_withThresholding(images,struct,data,num)
+%{
+Function Specifications:
+This function displays the most and least similar ROI pairings for a single
+ROI from Session 1 alongside a control pairing. This control pairing is
+selected by the user and compares an ROI from session 1 with an user selected
+ROI from a previously selected session. The best and worst pairings are
+found by looking through the ROI combinations within a specific session
+table in struct and finding the values that exhibit the most and least
+similarity. The three figures are displayed with their associated distance,
+jaccard index, correlation coefficent value, and thesholding checkmarks.
+
+INPUT:
+images: The collection of cropped out images for each Daas. These cropped
+images are standardized black and white pictures of each region of
+interest.
+
+struct: The table of structures which consist of all the ROI pairing
+combinations for a single ROI in Session 1.
+
+data: The structure containing all relevant data calculated up until this
+point. This contains the quantitative and probablistic analysis results 
+for every ROI pairing for every ROI in session 1.
+
+num: Shows which ROI was initially selected by the user from session 1.
+
+OUTPUT: NaN
+
+%}
 
 %Select that Daas and ROI that you want to set as a control
 in=input("Select a Session other than Daas1\n");
