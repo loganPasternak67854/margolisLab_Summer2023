@@ -5,7 +5,33 @@ This function should take the ROI structure of tables received from
 roi_accross_day as an input and output the best and worst ROI pairing for
 each Daas in terms of either distance or similarity. One should also have
 the option to display an ROI that the user suspects to be the same ROI
-accross sessions. 
+accross sessions.
+
+INPUT:
+struct: The table of structures which consist of all the ROI pairing
+combinations for a single ROI in Session 1.
+
+dimension: The number of layers within the multidimensional image matrix.
+
+image: The collection of cropped out images for each Daas. These cropped
+images are standardized black and white pictures of each region of
+interest.
+
+data: The structure containing all relevant data calculated up until this
+point.  This contains the quantitative and probablistic analysis results 
+for every ROI pairing for every ROI in session 1.
+
+num: Shows which ROI was initially selected by the user from session 1.
+
+OUTPUT:
+struct: A structure full of tables, whereby each field of the table contains
+the pairing combinations for a single ROI from session 1 with every other
+ROI of every other session. Three additional fields are attached to every
+table. These three fields display whether a pairing meets the threshold
+requirements set by the user for Distance, Jaccard Index, and Correlation 
+Coefficent values. If results are within desirable thresholds then an value
+of 1 will be displayed next to a pairing. Otherwise, a value of 0 will be 
+displayed. 
 %}
 
 %This are the initial thresholds for the distance, jaccard index, and
