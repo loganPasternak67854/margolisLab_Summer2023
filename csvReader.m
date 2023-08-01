@@ -267,37 +267,11 @@ session) tables.
 
 [roiPick,numpy]=roi_accross_day(data,dimension);
 
-%Creepy image of me pops up when best_worst_actual initiated
 roiPick=best_worst_actual(roiPick,dimension,images,data,numpy);
 
-%{
+%Selects the top ten most similar ROI pairs for every table within the
+%roiPIck list of tables
 
-imshow(images(1,52).window)
-title('Daas1 ROI1');
-figure, imshow(images(1,47).window)
-title('Daas1 ROI2');
-figure, imshow(images(1,67).window)
-title('Daas1 ROI3');
-figure, imshow(images(1,91).window)
-title('Daas1 ROI4');
-figure, imshow(images(1,44).window)
-title('Daas1 ROI5');
-figure, imshow(images(1,46).window)
-title('Daas1 ROI6');
-
-figure, imshow(images(5,46).window)
-title('Daas5 ROI1');
-figure, imshow(images(5,41).window)
-title('Daas5 ROI2');
-figure, imshow(images(5,65).window)
-title('Daas5 ROI3');
-figure, imshow(images(5,83).window)
-title('Daas5 ROI4')
-figure, imshow(images(5,40).window)
-title('Daas5 ROI5')
-figure, imshow(images(5,36).window)
-title('Daas5 ROI6')
-
-%}
+topTen=topTen_mostSimilar(roiPick,dimension);
 
 end
