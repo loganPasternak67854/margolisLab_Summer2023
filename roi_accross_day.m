@@ -17,6 +17,21 @@ jaccard: high similarity
 correlation: high similarity
 }
 
+INPUT:
+data: The collection of data collected up until this points. This contains
+the quantitative and probablistic analysis results for every ROI pairing
+for every ROI in session 1.
+
+dimension:The number of layers which comprimise the multidimension 3d-image
+matrix.
+
+OUTPUT:
+struct:A structure full of tables, whereby each field of the table contains
+the pairing combinations for a single ROI from session 1 with every other
+ROI of every other session.
+
+numpy:Shows which ROI was selected by the user in session 1.
+
 %}
 
 %RESULT WILL BE A DOUBLE
