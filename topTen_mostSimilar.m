@@ -1,4 +1,4 @@
-function[topTen]=topTen_mostSimilar(structure,dimension)
+function[topTen]=topTen_mostSimilar(structure,dimension,numpy,refNum,revamped_sessions)
 %{
 Specifications:
 This function should sift through the ROI selection structure of tables for
@@ -17,53 +17,114 @@ topTen: A list of 10 ROI pairings that exhibit high similarity scaling.
 
 topTen=struct;
 
-for i=2:dimension
-
-    %Collects the data for a single table/session
-    daas='Daas';
-    s=num2str(i);
-    field=strcat(daas,s);
+%If Reference Image is from Session 1 then execute the code below
+if refNum==1
+    for i=2:dimension
     
-    
-    tableDist=structure.(field).dist_allROI;
-    tableJaccard=structure.(field).jaccard_allROI;
-    tableCorr=structure.(field).corr_allROI;
-    tableDist_tf=structure.(field).withinTresh_Dist;
-    tableJaccard_tf=structure.(field).withinTresh_Jaccard;
-    tableCorr_tf=structure.(field).withinTresh_Correlation;
-    
-    %Finds the locations of the top ten most similar ROI pairs. 
-    simAdd=tableJaccard+tableCorr;
-    
-    [vals,locations]=maxk(simAdd,10);
-    
-    %Find the data values that correspond to the top ten most similar ROI pairs
-    %and store them into separate lists.
-    
-    Dist=zeros(length(locations),1);
-    Jaccard=zeros(length(locations),1);
-    Corr=zeros(length(locations),1);
-    Dist_TF=zeros(length(locations),1);
-    Jaccard_TF=zeros(length(locations),1);
-    Corr_TF=zeros(length(locations),1);
-    roi_NUM=zeros(length(locations),1);
-    
-    for j=1:length(locations)
-    
-        Dist(j)=tableDist(locations(j));
-        Jaccard(j)=tableJaccard(locations(j));
-        Corr(j)=tableCorr(locations(j));
-        Dist_TF(j)=tableDist_tf(locations(j));
-        Jaccard_TF(j)=tableJaccard_tf(locations(j));
-        Corr_TF(j)=tableCorr_tf(locations(j));
-        roi_NUM(j)=locations(j);
+        %Collects the data for a single table/session
+        daas='Daas';
+        s=num2str(i);
+        field=strcat(daas,s);
+        
+        
+        tableDist=structure.(field).dist_allROI;
+        tableJaccard=structure.(field).jaccard_allROI;
+        tableCorr=structure.(field).corr_allROI;
+        tableDist_tf=structure.(field).withinTresh_Dist;
+        tableJaccard_tf=structure.(field).withinTresh_Jaccard;
+        tableCorr_tf=structure.(field).withinTresh_Correlation;
+        
+        %Finds the locations of the top ten most similar ROI pairs. 
+        simAdd=tableJaccard+tableCorr;
+        
+        [vals,locations]=maxk(simAdd,10);
+        
+        %Find the data values that correspond to the top ten most similar ROI pairs
+        %and store them into separate lists.
+        
+        Dist=zeros(length(locations),1);
+        Jaccard=zeros(length(locations),1);
+        Corr=zeros(length(locations),1);
+        Dist_TF=zeros(length(locations),1);
+        Jaccard_TF=zeros(length(locations),1);
+        Corr_TF=zeros(length(locations),1);
+        roi_NUM=zeros(length(locations),1);
+        ref_roi=zeros(length(locations),1);
+        
+        for j=1:length(locations)
+        
+            Dist(j)=tableDist(locations(j));
+            Jaccard(j)=tableJaccard(locations(j));
+            Corr(j)=tableCorr(locations(j));
+            Dist_TF(j)=tableDist_tf(locations(j));
+            Jaccard_TF(j)=tableJaccard_tf(locations(j));
+            Corr_TF(j)=tableCorr_tf(locations(j));
+            roi_NUM(j)=locations(j);
+            ref_roi(j)=numpy;
+        
+        end
+        
+        %Creates struct of tables where the data for the top ten best pairings are stored
+        
+        topTen.(field)=table(Dist,Jaccard,Corr,Dist_TF,Jaccard_TF,Corr_TF,ref_roi,roi_NUM);
+        
     
     end
+%If Referene image is not from Session 1 then execute below code
+else
+
+    for i=1:length(revamped_sessions)
     
-    %Creates struct of tables where the data for the top ten best pairings are stored
+        %Collects the data for a single table/session
+        temp=revamped_sessions(i);
+        daas='Daas';
+        s=num2str(temp);
+        field=strcat(daas,s);
+        
+        
+        tableDist=structure.(field).dist_allROI;
+        tableJaccard=structure.(field).jaccard_allROI;
+        tableCorr=structure.(field).corr_allROI;
+        tableDist_tf=structure.(field).withinTresh_Dist;
+        tableJaccard_tf=structure.(field).withinTresh_Jaccard;
+        tableCorr_tf=structure.(field).withinTresh_Correlation;
+        
+        %Finds the locations of the top ten most similar ROI pairs. 
+        simAdd=tableJaccard+tableCorr;
+        
+        [vals,locations]=maxk(simAdd,10);
+        
+        %Find the data values that correspond to the top ten most similar ROI pairs
+        %and store them into separate lists.
+        
+        Dist=zeros(length(locations),1);
+        Jaccard=zeros(length(locations),1);
+        Corr=zeros(length(locations),1);
+        Dist_TF=zeros(length(locations),1);
+        Jaccard_TF=zeros(length(locations),1);
+        Corr_TF=zeros(length(locations),1);
+        roi_NUM=zeros(length(locations),1);
+        ref_roi=zeros(length(locations),1);
+        
+        for j=1:length(locations)
+        
+            Dist(j)=tableDist(locations(j));
+            Jaccard(j)=tableJaccard(locations(j));
+            Corr(j)=tableCorr(locations(j));
+            Dist_TF(j)=tableDist_tf(locations(j));
+            Jaccard_TF(j)=tableJaccard_tf(locations(j));
+            Corr_TF(j)=tableCorr_tf(locations(j));
+            roi_NUM(j)=locations(j);
+            ref_roi(j)=numpy;
+        
+        end
+        
+        %Creates struct of tables where the data for the top ten best pairings are stored
+        
+        topTen.(field)=table(Dist,Jaccard,Corr,Dist_TF,Jaccard_TF,Corr_TF,ref_roi,roi_NUM);
+        
     
-    topTen.(field)=table(Dist,Jaccard,Corr,Dist_TF,Jaccard_TF,Corr_TF,roi_NUM);
-    
+    end
 
 end
 
