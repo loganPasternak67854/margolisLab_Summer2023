@@ -1,4 +1,4 @@
-function[box,images,tf,jump,crouch]=similarityAnalysis(data,dimension)
+function[box,images,tf,jump,crouch]=similarityAnalysis(data,dimension,refNum,revamped_sessions)
 %{
 Problem Specification:
 
@@ -60,53 +60,116 @@ for i=1:dimension
 
 end
 
+%If the referene image from session 1 then execute the below code to
+%collect similarity data
 
-[rows,cols]=size(data(1).Centroids);
+if refNum==1
 
-%Do Jaccard and normxcorr2 on the cropped images
-
-%Number of centroids in Daas1
-for i=1:rows
+    [rows,cols]=size(data(1).Centroids);
     
-    %Loops from Daas2-last Daas
-    for j=2:dimension
+    %Do Jaccard and normxcorr2 on the cropped images
+    
+    %Number of centroids in Daas1
+    for i=1:rows
         
-        %Retrieves the BoundingBox data for Daas#j
-        temp=data(j).Centroids;
-        
-        %Loops through all the centroids of Daas#j
-        for k=1:length(temp(:,1))
+        %Loops from Daas2-last Daas
+        for j=2:dimension
             
-            %Determines the dimensions of images that will be compared
-            [numRows1,numCols1]=size(images(1,i).window);
-            [numRows2,numCols2]=size(images(j,k).window);
-           
-            %If the dimensions for one image are not the same then
-            %similarity analysis can not be done. ROI at corner!
-            if (numRows1~=numRows2)||(numCols1~=numCols2)
+            %Retrieves the BoundingBox data for Daas#j
+            temp=data(j).Centroids;
             
-                box(i,k,j).Jaccard=NaN;
-                box(i,k,j).Correlation=NaN;
-
-            else
+            %Loops through all the centroids of Daas#j
+            for k=1:length(temp(:,1))
                 
-                box(i,k,j).Jaccard=jaccard(images(1,i).window,images(j,k).window);
-                box(i,k,j).Correlation=corr2(images(1,i).window,images(j,k).window);
+                %Determines the dimensions of images that will be compared
+                [numRows1,numCols1]=size(images(1,i).window);
+                [numRows2,numCols2]=size(images(j,k).window);
+               
+                %If the dimensions for one image are not the same then
+                %similarity analysis can not be done. ROI at corner!
+                if (numRows1~=numRows2)||(numCols1~=numCols2)
                 
-                %{
-                temp=normxcorr2(images(1,i).window,images(j,k).window);
-                box(i,k,j).Correlation=max(temp(:));
-                %}
-
+                    box(i,k,j).Jaccard=NaN;
+                    box(i,k,j).Correlation=NaN;
+    
+                else
+                    
+                    box(i,k,j).Jaccard=jaccard(images(1,i).window,images(j,k).window);
+                    box(i,k,j).Correlation=corr2(images(1,i).window,images(j,k).window);
+                    
+                    %{
+                    temp=normxcorr2(images(1,i).window,images(j,k).window);
+                    box(i,k,j).Correlation=max(temp(:));
+                    %}
+    
+                end
+    
+                tf(i,k,j)=isnan(box(i,k,j).Correlation);
+    
             end
-
-            tf(i,k,j)=isnan(box(i,k,j).Correlation);
-
+    
         end
-
+    
     end
 
+%If the referene image is from any other session then execute the below code to
+%collect similarity data
+else
+
+    [rows,cols]=size(data(refNum).Centroids);
+   
+    l=length(revamped_sessions);
+    
+    %Do Jaccard and normxcorr2 on the cropped images
+    
+    %Number of centroids in referene Daas
+    for i=1:rows
+        
+        %Loops other Daas'
+        for j=1:l
+            
+            %Retrieves the BoundingBox data for Daas#j
+            temp=data(revamped_sessions(j)).Centroids;
+            
+            %Loops through all the centroids of Daas#j
+            for k=1:length(temp(:,1))
+                
+                %Determines the dimensions of images that will be compared
+                [numRows1,numCols1]=size(images(refNum,i).window);
+                [numRows2,numCols2]=size(images(revamped_sessions(j),k).window);
+               
+                %If the dimensions for one image are not the same then
+                %similarity analysis can not be done. ROI at corner!
+                if (numRows1~=numRows2)||(numCols1~=numCols2)
+                
+                    box(i,k,revamped_sessions(j)).Jaccard=NaN;
+                    box(i,k,revamped_sessions(j)).Correlation=NaN;
+    
+                else
+                    
+                    box(i,k,revamped_sessions(j)).Jaccard=jaccard(images(refNum,i).window,images(revamped_sessions(j),k).window);
+                    box(i,k,revamped_sessions(j)).Correlation=corr2(images(refNum,i).window,images(revamped_sessions(j),k).window);
+                    
+                    %{
+                    temp=normxcorr2(images(1,i).window,images(j,k).window);
+                    box(i,k,j).Correlation=max(temp(:));
+                    %}
+    
+                end
+    
+                tf(i,k,revamped_sessions(j))=isnan(box(i,k,revamped_sessions(j)).Correlation);
+    
+            end
+    
+        end
+    
+    end
+
+
+
 end
+
+
 
 
 end
