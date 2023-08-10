@@ -1,4 +1,4 @@
-function[container]=centroidDistance(structure,numLayers,xdim,ydim)
+function[container,revamped_sessions]=centroidDistance(structure,numLayers,xdim,ydim,refNum)
 %{
 DESCIRPTION: Calculate the distances between all masks of each session. This involves
 comparing the center coordinates (x1,y1) of each Region of Interest(ROI) in
@@ -10,6 +10,10 @@ INPUT:
 structure: a structure which contains the image matrix which will will need
 for distance analysis.
 numLayers: this is the number of layers in the image matrix
+xdim:
+ydim:
+refSession: The session chosen by the user as the reference session for
+distance and similarity calculation.
 
 OUTPUT:
 container: a structure that will contain the centroid locations for each
@@ -91,45 +95,98 @@ for i=1:numLayers
     container(i).correctCentroids=centBox(i).centroid_coordArray;
 end
 
-%{
-Loop through the points of Daas1 then loop through the Daas layers then
-loop through the points in that layer to determine the distance between
-centroids in Daas1 with other Daas'.
-%}
-
-[rows,cols]=size(container(1).correctCentroids);
-
-for i=1:rows
-    for j=2:numLayers
-        [numPoint2,pass]=size(container(j).correctCentroids);
-        for k=1:numPoint2
-            
-            %Coordinate of a centroid in Daas1
-            base1=container(1).correctCentroids;
-            x1=base1(i,1);
-            y1=base1(i,2);
-            
-            %Coordinate of a centroid in every other Daas
-            base2=container(j).correctCentroids;
-            x2=base2(k,1);
-            y2=base2(k,2);
-
-            %This is the distance between point i and point k in  their
-            %respective planes. Row=Daas1 and Column=AltDaas
-            distance=distanceBetween(x1,y1,x2,y2);
-            temp(i,k,j)=distance;
+%If Session1 is chosen as the reference image
+if (refNum==1)
+    %{
+    Loop through the points of Daas1 then loop through the Daas layers then
+    loop through the points in that layer to determine the distance between
+    centroids in Daas1 with other Daas'.
+    %}
+    
+    [rows,cols]=size(container(1).correctCentroids);
+    
+    for i=1:rows
+        for j=2:numLayers
+            [numPoint2,pass]=size(container(j).correctCentroids);
+            for k=1:numPoint2
+                
+                %Coordinate of a centroid in Daas1
+                base1=container(1).correctCentroids;
+                x1=base1(i,1);
+                y1=base1(i,2);
+                
+                %Coordinate of a centroid in every other Daas
+                base2=container(j).correctCentroids;
+                x2=base2(k,1);
+                y2=base2(k,2);
+    
+                %This is the distance between point i and point k in  their
+                %respective planes. Row=Daas1 and Column=AltDaas
+                distance=distanceBetween(x1,y1,x2,y2);
+                temp(i,k,j)=distance;
+            end
         end
     end
-end
+    
+    %Stores distance values into container structure
+    %Find a way to get rid of the unnecessary zeros in each distance struct
+    
+    for j=2:numLayers
+        standard=temp(:,:,j);
+        container(j).distance=standard;
+        container(j).distance(:,all(~container(j).distance,1))=[];
+        container(j).distance((rows+1):end,:)=[];
+    end
 
-%Stores distance values into container structure
-%Find a way to get rid of the unnecessary zeros in each distance struct
+    revamped_sessions=0;
 
-for j=2:numLayers
-    standard=temp(:,:,j);
-    container(j).distance=standard;
-    container(j).distance(:,all(~container(j).distance,1))=[];
-    container(j).distance((rows+1):end,:)=[];
+%If any other session is chosen as the reference image
+else 
+
+    %{
+    Loop through the points of selected Daas then loop through the Daas layers then
+    loop through the points in that layer to determine the distance between
+    centroids in selected Daas with other Daas'.
+    %}
+    [rows,cols]=size(container(refNum).correctCentroids);
+    sessions=1:numLayers;
+    revamped_sessions=setdiff(sessions,refNum);
+
+    for i=1:rows
+        for j=1:length(revamped_sessions)
+            [numPoint2,pass]=size(container(revamped_sessions(j)).correctCentroids);
+            for k=1:numPoint2
+                
+                %Coordinate of a centroid in Daas1
+                base1=container(refNum).correctCentroids;
+                x1=base1(i,1);
+                y1=base1(i,2);
+                
+                %Coordinate of a centroid in every other Daas
+                base2=container(revamped_sessions(j)).correctCentroids;
+                x2=base2(k,1);
+                y2=base2(k,2);
+    
+                %This is the distance between point i and point k in  their
+                %respective planes. Row=Daas1 and Column=AltDaas
+                distance=distanceBetween(x1,y1,x2,y2);
+                temp(i,k,revamped_sessions(j))=distance;
+            end
+        end
+    end
+
+    %Stores distance values into container structure
+    %Find a way to get rid of the unnecessary zeros in each distance struct
+    
+    for j=1:length(revamped_sessions)
+        q=revamped_sessions(j);
+        standard=temp(:,:,q);
+        container(q).distance=standard;
+        %container(q).distance(:,all(~container(q).distance,1))=[];
+        container(q).distance(:,all(container(q).distance==0))=[];
+        container(q).distance((rows+1):end,:)=[];
+    end
+
 end
 
 end
