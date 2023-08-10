@@ -14,7 +14,7 @@ Returns an image matrix that will be fed into a 3d matrix
 
 Displays all the ROIs for each session.
 
-#CITE CODE FOR ROI EXTRACTION: ON MAC
+#https://github.com/MouseLand/suite2p/blob/main/jupyter/run_suite2p_colab_2021.ipynb
 
 """
 
