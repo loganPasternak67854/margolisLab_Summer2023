@@ -1,4 +1,4 @@
-function[struct]=best_worst_actual(struct,dimension,image,data,num)
+function[struct]=best_worst_actual(struct,dimension,image,data,num,refNum,revamped_sessions)
 %{
 Specifications:
 This function should take the ROI structure of tables received from
@@ -32,6 +32,7 @@ requirements set by the user for Distance, Jaccard Index, and Correlation
 Coefficent values. If results are within desirable thresholds then an value
 of 1 will be displayed next to a pairing. Otherwise, a value of 0 will be 
 displayed. 
+
 %}
 
 %This are the initial thresholds for the distance, jaccard index, and
@@ -66,33 +67,69 @@ end
 daasNum=daasSelection(dimension);
 %}
 
-%Create a field in all struct tables that show whether ROI is within
-%threshold values.
-
-for i=2:dimension
+%If reference image is from Session 1 execute the code below
+if refNum==1
+    %Create a field in all struct tables that show whether ROI is within
+    %threshold values.
     
-    daas='Daas';
-    s=num2str(i);
-    field=strcat(daas,s);
-
-    tableDist=struct.(field).dist_allROI;
-    tableJaccard=struct.(field).jaccard_allROI;
-    tableCorr=struct.(field).corr_allROI;
+    for i=2:dimension
+        
+        daas='Daas';
+        s=num2str(i);
+        field=strcat(daas,s);
     
-    struct.(field).withinTresh_Dist=tableDist<=thresholdDist;
-    struct.(field).withinTresh_Jaccard=tableJaccard>=thresholdJaccard;
-    struct.(field).withinTresh_Correlation=tableCorr>=thresholdCorr;
+        tableDist=struct.(field).dist_allROI;
+        tableJaccard=struct.(field).jaccard_allROI;
+        tableCorr=struct.(field).corr_allROI;
+        
+        struct.(field).withinTresh_Dist=tableDist<=thresholdDist;
+        struct.(field).withinTresh_Jaccard=tableJaccard>=thresholdJaccard;
+        struct.(field).withinTresh_Correlation=tableCorr>=thresholdCorr;
+    
+    end
+    
+    %Find ROIs pairing that are the most similar and most disimilar.
+    %Display along with control session.
+    
+    res=input("Do you want to display the most similar and dismilar ROI overlay choices? Press one for yes and two for no...\n");
+    yn=cast(res,"uint8");
+    
+    if yn==1
+        overlayDisplay_withThresholding(image,struct,data,num,refNum,revamped_sessions);
+    end
 
-end
+%If reference image is not from Session 1 execute the code below
+else
 
-%Find ROIs pairing that are the most similar and most disimilar.
-%Display along with control session.
+    %Create a field in all struct tables that show whether ROI is within
+    %threshold values.
+    
+    for i=1:length(revamped_sessions)
+        temp=revamped_sessions(i);
+        daas='Daas';
+        s=num2str(temp);
+        field=strcat(daas,s);
+    
+        tableDist=struct.(field).dist_allROI;
+        tableJaccard=struct.(field).jaccard_allROI;
+        tableCorr=struct.(field).corr_allROI;
+        
+        struct.(field).withinTresh_Dist=tableDist<=thresholdDist;
+        struct.(field).withinTresh_Jaccard=tableJaccard>=thresholdJaccard;
+        struct.(field).withinTresh_Correlation=tableCorr>=thresholdCorr;
+    
+    end
+    
+    %Find ROIs pairing that are the most similar and most disimilar.
+    %Display along with control session.
+    
+    res=input("Do you want to display the most similar and dismilar ROI overlay choices? Press one for yes and two for no...\n");
+    yn=cast(res,"uint8");
+    
+    if yn==1
+        overlayDisplay_withThresholding(image,struct,data,num,refNum,revamped_sessions);
+    end
 
-res=input("Do you want to display the most similar and dismilar ROI overlay choices? Press one for yes and two for no...\n");
-yn=cast(res,"uint8");
-
-if yn==1
-    overlayDisplay_withThresholding(image,struct,data,num);
 end
 
 end
