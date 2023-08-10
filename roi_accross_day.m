@@ -1,4 +1,4 @@
-function[struct,numpy]=roi_accross_day(data,dimension)
+function[struct,numpy]=roi_accross_day(data,dimension,refNum,revamped_sessions)
 %{
 Specifications:
 1. Pick one cell from all FOVs 
@@ -35,36 +35,80 @@ numpy:Shows which ROI was selected by the user in session 1.
 %}
 
 %RESULT WILL BE A DOUBLE
-result=roiSelection(data,1);
 
-for i=2:dimension
+%Select an ROI from Daas1. The data for this ROI will be tracked across
+%multiple days.
+result=roiSelection(data,refNum);
+
+%If Reference image from which ROI is being selected is from Session 1
+%execute the following code 
+
+if refNum==1
+    for i=2:dimension
+        
+        daas='Daas';
+        s=num2str(i);
+        field=strcat(daas,s);
+        %struct.(field)=NaN;
     
-    daas='Daas';
-    s=num2str(i);
-    field=strcat(daas,s);
-    %struct.(field)=NaN;
-
-    distArray=data(i).Distance;
-    dist_allROI=transpose(distArray(result,:));
-
-    simArray=data(i).Similarity;
-    sim_allROI=simArray(result,:);
+        distArray=data(i).Distance;
+        dist_allROI=transpose(distArray(result,:));
     
-    l=length(sim_allROI);
-    jaccard_allROI=zeros(l,1);
-    corr_allROI=zeros(l,1);
-
-    for j=1:length(sim_allROI)
-
-        jaccard_allROI(j)=sim_allROI(j).Jaccard;
-        corr_allROI(j)=sim_allROI(j).Correlation;
-
+        simArray=data(i).Similarity;
+        sim_allROI=transpose(simArray(result,:));
+        
+        l=length(sim_allROI);
+        jaccard_allROI=zeros(l,1);
+        corr_allROI=zeros(l,1);
+    
+        for j=1:length(sim_allROI)
+    
+            jaccard_allROI(j)=sim_allROI(j).Jaccard;
+            corr_allROI(j)=sim_allROI(j).Correlation;
+    
+        end
+    
+        struct.(field)=table(dist_allROI,jaccard_allROI,corr_allROI);
+        
     end
-
-    struct.(field)=table(dist_allROI,jaccard_allROI,corr_allROI);
     
-end
+    numpy=result;
 
-numpy=result;
+%If Reference image from which ROI is being selected is not from Session 1
+%execute the following code
+else
+    
+    for i=1:length(revamped_sessions)
+        temp=revamped_sessions(i);
+        daas='Daas';
+        s=num2str(temp);
+        field=strcat(daas,s);
+        %struct.(field)=NaN;
+    
+        distArray=data(temp).Distance;
+        dist_allROI=transpose(distArray(result,:));
+    
+        simArray=data(temp).Similarity;
+        sim_allROI=transpose(simArray(result,:));
+        
+        l=length(sim_allROI);
+        jaccard_allROI=zeros(l,1);
+        corr_allROI=zeros(l,1);
+    
+        for j=1:l
+    
+            jaccard_allROI(j)=sim_allROI(j).Jaccard;
+            corr_allROI(j)=sim_allROI(j).Correlation;
+    
+        end
+    
+        struct.(field)=table(dist_allROI,jaccard_allROI,corr_allROI);
+        
+    end
+    
+    numpy=result;
+
+
+end
 
 end
