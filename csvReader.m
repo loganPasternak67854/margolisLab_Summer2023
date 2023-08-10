@@ -1,4 +1,4 @@
-function[data,bank,box,rock,images,roiPick]=csvReader()
+function[data,bank,box,rock,images,roiPick,topTen]=csvReader()
 
 %{
 DESCRIPTION: This function is the main branch of an alogrithm that does
@@ -204,7 +204,9 @@ for i=1:dimension
 
 end
 
-bank=centroidDistance(data,dimension,xdim,ydim);
+refNum=referenceImage_Selection(dimension);
+
+[bank,revamped_sessions]=centroidDistance(data,dimension,xdim,ydim,refNum);
 
 for i=1:dimension
     data(i).oldCentroids=bank(i).centroids;
@@ -212,21 +214,47 @@ for i=1:dimension
     data(i).BoundingBox=bank(i).boundingBox;
 end
 
-for i=2:dimension
-    data(i).Distance=bank(i).distance;
+%If the reference image is session 1 then store distance values in the
+%following way
+
+if refNum==1
+
+    for i=2:dimension
+        data(i).Distance=bank(i).distance;
+    end
+
+%If the reference image is not session 1 then execute the below code to
+%collect all the distance data
+
+else
+
+    for i=1:length(revamped_sessions)
+        temp=revamped_sessions(i);
+        data(temp).Distance=bank(temp).distance;
+    end
+
 end
 
+
 %Find max and min values of length and width of bounding box and figure out
-%thresholding.This will be fed into similarity analysis will be used to
+%thresholding. This will be fed into similarity analysis will be used to
 %calc the dimensions of the evaluation window. Multipy max and min by 2.
 
-[box,images,tf]=similarityAnalysis(data,dimension);
+[box,images,tf]=similarityAnalysis(data,dimension,refNum,revamped_sessions);
 
-for i=2:dimension
-
-    [row,column]=size(data(i).Distance);
-    data(i).Similarity=box(:,1:column,i);
-
+%Similarity Data Collected when Reference Image is from Session 1
+if refNum==1
+    for i=2:dimension    
+        [row,column]=size(data(i).Distance);
+        data(i).Similarity=box(:,1:column,i);  
+    end
+%Similarity Data Collected when Reference Image is from any other Session
+else
+    for i=1:length(revamped_sessions)
+        temp=revamped_sessions(i);
+        [row,column]=size(data(temp).Distance);
+        data(temp).Similarity=box(:,1:column,temp);
+    end
 end
 
 %Used to display a Daas with centroids labeled
@@ -243,17 +271,32 @@ end
 in=input("Do you want to display an overlay of two masks? 1=Yes and 2=No ...\n");
 yn=cast(in,"uint8");
 if yn==1
-overlayDisplay(images,data);
+    overlayDisplay(images,data,refNum);
 end
 
 %Shows which masks comparisons are viable
+if refNum==1
 
-for i=2:dimension
+    for i=2:dimension
+    
+        if any(tf(:,:,i),"all")
+            rock(i)=1;
+        else
+            rock(i)=0;
+        end
+    
+    end
 
-    if any(tf(:,:,i),"all")
-        rock(i)=1;
-    else
-        rock(i)=0;
+else
+
+    for i=1:length(revamped_sessions)
+        temp=revamped_sessions(i);
+        if any(tf(:,:,temp),"all")
+            rock(temp)=1;
+        else
+            rock(temp)=0;
+        end
+    
     end
 
 end
@@ -265,13 +308,18 @@ structure contains data tables. The structure will have 2:(number of
 session) tables.
 %}
 
-[roiPick,numpy]=roi_accross_day(data,dimension);
+[roiPick,numpy]=roi_accross_day(data,dimension,refNum,revamped_sessions);
 
-roiPick=best_worst_actual(roiPick,dimension,images,data,numpy);
+roiPick=best_worst_actual(roiPick,dimension,images,data,numpy,refNum,revamped_sessions);
 
 %Selects the top ten most similar ROI pairs for every table within the
 %roiPIck list of tables
 
-topTen=topTen_mostSimilar(roiPick,dimension);
+topTen=topTen_mostSimilar(roiPick,dimension,numpy,refNum,revamped_sessions);
+
+%Call to display_topTen
+
+display_topTen(topTen,images,refNum,revamped_sessions);
+%}
 
 end
