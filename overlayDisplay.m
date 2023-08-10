@@ -1,4 +1,4 @@
-function[]=overlayDisplay(images,data)
+function[]=overlayDisplay(images,data,refNum)
 %{
 Function Specifications:
 
@@ -16,52 +16,113 @@ OUTPUT: NaN
 
 %}
 
-%Choose which mask in Daas1 you want to use for comparison
-in=input("Please select a mask in Daas 1...\n");
+if refNum==1
+    %Choose which mask in Daas1 you want to use for comparison
+    in=input("Please select a mask in Daas 1...\n");
+    
+    in_1=cast(in,"uint8");
+    
+    %Choose which Daas to use in comparison
+    
+    in=input("Please select a Daas other than Daas1...\n");
+    
+    in_2=cast(in,"uint8");
+    
+    %Choose which mask in the selected Daas to use in comparison
+    
+    in=input("Please select a mask from the selected Daas...\n");
+    
+    in_3=cast(in,"uint8");
+    
+    %Used to visualize overlay between masks and display distance and
+    %similarity values.
+    
+    img1=cast(images(1,in_1).window,"uint8");
+    mask= img1~=0;
+    img1(mask)=255;
+    img2=cast(images(in_2,in_3).window,"uint8");
+    rgbImage=labeloverlay(img1,img2);
+    %jljljljljl
+    figure
+    imshow(rgbImage,'InitialMagnification',800)
+    
+    formatSpec='Distance = %d';
+    %Distances between Daas1 and Daas5 centroids array
+    distArray=data(in_2).Distance;
+    %Distance between Daas1 centroid 1 and Daas5 centroid 2
+    A1=distArray(in_1,in_3);
+    StringA=sprintf(formatSpec,A1);
+    
+    formatSpec='Jaccard = %d';
+    %Jaccard Similarity Index between Daas1 - centroid 1 and Daas5 centroid 2
+    A2=data(in_2).Similarity(in_1,in_3).Jaccard;
+    StringB=sprintf(formatSpec,A2);
+    
+    formatSpec='Correlation = %d';
+    %Simple 2d correlation between Daas1 - centroid 1 and Daas 5 centroid 2
+    A3=data(in_2).Similarity(in_1,in_3).Correlation;
+    StringC=sprintf(formatSpec,A3);
+    
+    title({StringA,StringB,StringC})
+else
+    %Choose which mask in selected Daas you want to use for comparison
+    statement1="Please select a mask in Daas";
+    statement2=num2str(refNum);
+    statement3="...\n";
+    totalStatement=append(statement1,statement2,statement3);
+    
+    in=input(totalStatement);
+    
+    in_1=cast(in,"uint8");
+    
+    %Choose which Daas to use in comparison
 
-in_1=cast(in,"uint8");
+    statement1="Please select a Daas other than Daas";
+    statement2=num2str(refNum);
+    statement3="...\n";
+    totalStatement=append(statement1,statement2,statement3);
+    
+    in=input(totalStatement);
+    
+    in_2=cast(in,"uint8");
+    
+    %Choose which mask in the selected Daas to use in comparison
+    
+    in=input("Please select a mask from the selected Daas...\n");
+    
+    in_3=cast(in,"uint8");
+    
+    %Used to visualize overlay between masks and display distance and
+    %similarity values.
+    
+    img1=cast(images(refNum,in_1).window,"uint8");
+    mask= img1~=0;
+    img1(mask)=255;
+    img2=cast(images(in_2,in_3).window,"uint8");
+    rgbImage=labeloverlay(img1,img2);
+    %jljljljljl
+    figure
+    imshow(rgbImage,'InitialMagnification',800)
+    
+    formatSpec='Distance = %d';
+    %Distances between Daas1 and Daas5 centroids array
+    distArray=data(in_2).Distance;
+    %Distance between Daas1 centroid 1 and Daas5 centroid 2
+    A1=distArray(in_1,in_3);
+    StringA=sprintf(formatSpec,A1);
+    
+    formatSpec='Jaccard = %d';
+    %Jaccard Similarity Index between Daas1 - centroid 1 and Daas5 centroid 2
+    A2=data(in_2).Similarity(in_1,in_3).Jaccard;
+    StringB=sprintf(formatSpec,A2);
+    
+    formatSpec='Correlation = %d';
+    %Simple 2d correlation between Daas1 - centroid 1 and Daas 5 centroid 2
+    A3=data(in_2).Similarity(in_1,in_3).Correlation;
+    StringC=sprintf(formatSpec,A3);
+    
+    title({StringA,StringB,StringC})
 
-%Choose which Daas to use in comparison
-
-in=input("Please select a Daas other than Daas1...\n");
-
-in_2=cast(in,"uint8");
-
-%Choose which mask in the selected Daas to use in comparison
-
-in=input("Please select a mask from the selected Daas...\n");
-
-in_3=cast(in,"uint8");
-
-%Used to visualize overlay between masks and display distance and
-%similarity values.
-
-img1=cast(images(1,in_1).window,"uint8");
-mask= img1~=0;
-img1(mask)=255;
-img2=cast(images(in_2,in_3).window,"uint8");
-rgbImage=labeloverlay(img1,img2);
-%jljljljljl
-figure
-imshow(rgbImage,'InitialMagnification',800)
-
-formatSpec='Distance = %d';
-%Distances between Daas1 and Daas5 centroids array
-distArray=data(in_2).Distance;
-%Distance between Daas1 centroid 1 and Daas5 centroid 2
-A1=distArray(in_1,in_3);
-StringA=sprintf(formatSpec,A1);
-
-formatSpec='Jaccard = %d';
-%Jaccard Similarity Index between Daas1 - centroid 1 and Daas5 centroid 2
-A2=data(in_2).Similarity(in_1,in_3).Jaccard;
-StringB=sprintf(formatSpec,A2);
-
-formatSpec='Correlation = %d';
-%Simple 2d correlation between Daas1 - centroid 1 and Daas 5 centroid 2
-A3=data(in_2).Similarity(in_1,in_3).Correlation;
-StringC=sprintf(formatSpec,A3);
-
-title({StringA,StringB,StringC})
+end
 
 end
